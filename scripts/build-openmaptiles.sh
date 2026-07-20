@@ -6,6 +6,11 @@ SOURCE=/data/planet.osm.pbf
 PART=$OUT/openmaptiles.pmtiles.part
 mkdir -p "$OUT/sources" "$OUT/tmp"
 test -s "$SOURCE"
+exec 9>"$OUT/.build.lock"
+if ! flock -n 9; then
+  echo "another openmaptiles build is already running" >&2
+  exit 1
+fi
 rm -f "$PART"
 
 java -jar /app/planetiler-openmaptiles.jar \
