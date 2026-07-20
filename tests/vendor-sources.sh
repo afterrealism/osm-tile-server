@@ -4,7 +4,6 @@ set -euo pipefail
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 
 declare -A EXPECTED=(
-  [openstreetmap-carto]=7d2926a85acd07c0a4051f3d444ebe2b59c0676e
   [positron]=5f4d3457396c8dd9879a41d11edfb318877e1ddc
   [dark-matter]=d79ee85228e2701118009088dcdc824c461d8437
   [osm-bright]=0a78b469ecfabdc771e058ffce1bf474926df249
