@@ -1,16 +1,18 @@
-import { copyFileSync, mkdirSync, renameSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { readFileSync } from 'node:fs';
 
 const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const assetRoot = process.env.STYLE_ASSET_ROOT ?? join(repoRoot, 'data/style-assets');
 
 const styles = {
+  standard: 'osm-bright',
   light: 'positron',
   dark: 'dark-matter',
   natural: 'osm-bright',
 };
+const styleNames = ['standard', 'light', 'dark', 'natural'];
+const sourceUrl = 'pmtiles://openmaptiles';
 
 const naturalPaint = {
   background: { 'background-color': '#e8eadf' },
@@ -29,11 +31,15 @@ function writeAtomic(path, contents) {
   renameSync(part, path);
 }
 
-for (const [name, upstream] of Object.entries(styles)) {
+for (const name of styleNames) {
+  const upstream = styles[name];
+  if (!upstream) {
+    throw new Error(`unknown style: ${name}`);
+  }
   const sourcePath = join(repoRoot, 'base-styles', upstream, 'style.json');
   const style = JSON.parse(readFileSync(sourcePath, 'utf8'));
 
-  style.sources.openmaptiles.url = 'mbtiles://openmaptiles.mbtiles';
+  style.sources.openmaptiles.url = sourceUrl;
   style.glyphs = '{fontstack}/{range}.pbf';
   style.sprite = '{styleJsonFolder}/sprite';
 

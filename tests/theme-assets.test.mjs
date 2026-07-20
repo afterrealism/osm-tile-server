@@ -1,23 +1,38 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 
-const root = process.env.STYLE_ASSET_ROOT ?? 'data/style-assets';
+const root = mkdtempSync(join(tmpdir(), 'theme-assets-'));
+test.after(() => rmSync(root, { recursive: true, force: true }));
+execFileSync(process.execPath, ['scripts/prepare-theme-assets.mjs'], {
+  env: { ...process.env, STYLE_ASSET_ROOT: root },
+});
 
 function readStyle(name) {
   return JSON.parse(readFileSync(join(root, name, 'style.json'), 'utf8'));
 }
 
-for (const name of ['light', 'dark', 'natural']) {
+for (const name of ['standard', 'light', 'dark', 'natural']) {
   test(`${name} style is fully local`, () => {
     const style = readStyle(name);
-    assert.equal(style.sources.openmaptiles.url, 'mbtiles://openmaptiles.mbtiles');
+    assert.equal(style.sources.openmaptiles.url, 'pmtiles://openmaptiles');
     assert.equal(style.glyphs, '{fontstack}/{range}.pbf');
     assert.equal(style.sprite, '{styleJsonFolder}/sprite');
     assert.doesNotMatch(JSON.stringify(style), /https?:\/\/|\{key\}|maptiler/i);
   });
 }
+
+test('standard style preserves the OSM Bright palette', () => {
+  const standard = readStyle('standard');
+  const standardPaint = Object.fromEntries(
+    standard.layers.map((layer) => [layer.id, layer.paint ?? {}]),
+  );
+  assert.equal(standardPaint.background['background-color'], '#f8f4f0');
+  assert.equal(standardPaint['landcover-wood']['fill-color'], '#6a4');
+});
 
 test('natural style has the green terrain palette', () => {
   const style = readStyle('natural');

@@ -9,12 +9,13 @@ const REQUIRED_FILES = ['sprite.json', 'sprite.png', 'sprite@2x.json', 'sprite@2
 const FORBIDDEN = /https?:\/\/|\{key\}|maptiler/i;
 
 let failures = 0;
+const STYLE_NAMES = ['standard', 'light', 'dark', 'natural'];
 const fail = (message) => {
   console.error(`ERROR: ${message}`);
   failures += 1;
 };
 
-for (const name of ['light', 'dark', 'natural']) {
+for (const name of STYLE_NAMES) {
   const dir = join(assetRoot, name);
   const stylePath = join(dir, 'style.json');
   if (!existsSync(stylePath)) {
@@ -26,6 +27,9 @@ for (const name of ['light', 'dark', 'natural']) {
     fail(`${name}: style.json contains a remote URL, {key} placeholder, or maptiler reference`);
   }
   const style = JSON.parse(raw);
+  if (style.sources?.openmaptiles?.url !== 'pmtiles://openmaptiles') {
+    fail(`${name}: source is not pmtiles://openmaptiles`);
+  }
   for (const file of REQUIRED_FILES) {
     if (!existsSync(join(dir, file))) {
       fail(`${name}: missing ${file}`);
