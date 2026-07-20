@@ -1,41 +1,4 @@
 services:
-  database:
-    build: ./database
-    image: afterrealism/osm-tile-database:pg18
-    shm_size: 256mb
-    environment:
-      POSTGRES_DB: gis
-      POSTGRES_USER: renderer
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-renderer}
-      PGDATA: /var/lib/postgresql/18/docker
-    volumes:
-      - ./data/postgres18:/var/lib/postgresql
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
-      interval: 5s
-      timeout: 5s
-      retries: 30
-
-  map:
-    build: .
-    image: afterrealism/osm-tile-server:local
-    shm_size: 128mb
-    depends_on:
-      database:
-        condition: service_healthy
-    environment:
-      PGHOST: database
-      PGPORT: 5432
-      PGDATABASE: gis_carto_v6
-      PGUSER: renderer
-      PGPASSWORD: ${POSTGRES_PASSWORD:-renderer}
-      DATABASE_STATE_DIR: /data/database18-carto-v6-state
-    volumes:
-      - ./data:/data
-    ports:
-      - "8080:80"
-    command: "run"
-
   themes:
     build: ./base-styles/tileserver-gl
     image: afterrealism/tileserver-gl:v5.6.0-local
@@ -44,17 +7,19 @@ services:
       PORT: 8080
       STYLE_ASSET_ROOT: /data/style-assets
     volumes:
-      - ./data:/data:ro
+      - ./data/openmaptiles:/data/openmaptiles:ro
+      - ./data/style-assets:/data/style-assets:ro
       - ./themes/config.json:/data/config.json:ro
-      - ./base-styles:/workspace/base-styles:ro
       - ./scripts:/workspace/scripts:ro
       - ./themes/start.sh:/workspace/themes/start.sh:ro
     entrypoint: [/workspace/themes/start.sh]
+    ports:
+      - "8080:8080"
     healthcheck:
       test: ["CMD", "node", "/usr/src/app/src/healthcheck.js"]
       interval: 5s
       timeout: 5s
-      retries: 30
+      retries: 60
 
   planetiler:
     build:
@@ -63,7 +28,7 @@ services:
     image: afterrealism/planetiler-openmaptiles:v3.16-local
     profiles: [tools]
     environment:
-      JAVA_TOOL_OPTIONS: -Xmx4g
+      JAVA_TOOL_OPTIONS: ${JAVA_TOOL_OPTIONS:--Xmx20g -XX:MaxHeapFreeRatio=40}
     volumes:
       - ./data:/data
       - ./:/workspace:ro
