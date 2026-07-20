@@ -5,6 +5,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 
+import { STYLE_NAMES } from '../scripts/style-registry.mjs';
+
 const root = mkdtempSync(join(tmpdir(), 'theme-assets-'));
 test.after(() => rmSync(root, { recursive: true, force: true }));
 execFileSync(process.execPath, ['scripts/prepare-theme-assets.mjs'], {
@@ -15,7 +17,7 @@ function readStyle(name) {
   return JSON.parse(readFileSync(join(root, name, 'style.json'), 'utf8'));
 }
 
-for (const name of ['standard', 'light', 'dark', 'natural']) {
+for (const name of STYLE_NAMES) {
   test(`${name} style is fully local`, () => {
     const style = readStyle(name);
     assert.equal(style.sources.openmaptiles.url, 'pmtiles://openmaptiles');

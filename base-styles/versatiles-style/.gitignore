@@ -1,0 +1,10 @@
+
+.claude
+.DS_Store
+.vscode
+coverage
+dist/
+docs/
+node_modules
+release
+test

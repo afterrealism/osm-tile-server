@@ -1,0 +1,115 @@
+import { readdirSync, readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { describe, expect, it } from 'vitest';
+import { isTileJSONSpecification } from './tilejson.js';
+
+describe('isTileJSONSpecification', () => {
+	const validVectorSpec = {
+		tilejson: '3.0.0',
+		type: 'vector',
+		format: 'pbf',
+		tiles: ['http://example.com/{z}/{x}/{y}.pbf'],
+		vector_layers: [{ id: 'layer1', fields: { property1: 'Number' }, description: 'A test layer' }],
+	};
+	const validRasterSpec = {
+		tilejson: '3.0.0',
+		type: 'raster',
+		format: 'png',
+		tiles: ['http://example.com/{z}/{x}/{y}.png'],
+	};
+
+	it('should return true for a valid raster source', () => {
+		expect(isTileJSONSpecification({ ...validRasterSpec })).toBeTruthy();
+	});
+
+	it('should return true for a valid vector source', () => {
+		expect(isTileJSONSpecification({ ...validVectorSpec })).toBeTruthy();
+	});
+
+	it('should throw an error if not object', () => {
+		expect(() => isTileJSONSpecification(null)).toThrow('spec must be an object');
+		expect(() => isTileJSONSpecification(1)).toThrow('spec must be an object');
+	});
+
+	it('should throw an error if the tiles property is missing', () => {
+		expect(() => isTileJSONSpecification({ ...validRasterSpec, tiles: undefined })).toThrow(
+			'spec.tiles must be a non-empty array of strings'
+		);
+	});
+
+	it('should throw an error if the bounds property is invalid', () => {
+		[
+			{ bounds: [-181, -90, 180, 90], errorMessage: 'spec.bounds[0]' },
+			{ bounds: [-180, -91, 180, 90], errorMessage: 'spec.bounds[1]' },
+			{ bounds: [-180, -90, 181, 90], errorMessage: 'spec.bounds[2]' },
+			{ bounds: [-180, -90, 180, 91], errorMessage: 'spec.bounds[3]' },
+			{ bounds: [180, -90, -180, 90], errorMessage: 'spec.bounds[0] must be smaller than spec.bounds[2]' },
+			{ bounds: [-180, 90, 180, -90], errorMessage: 'spec.bounds[1] must be smaller than spec.bounds[3]' },
+		].forEach(({ bounds, errorMessage }) => {
+			expect(() => isTileJSONSpecification({ ...validVectorSpec, bounds })).toThrow(errorMessage);
+		});
+	});
+
+	it('should throw an error if the center property is invalid', () => {
+		[
+			{ center: [-181, 0], errorMessage: 'spec.center[0]' },
+			{ center: [181, 0], errorMessage: 'spec.center[0]' },
+			{ center: [0, -91], errorMessage: 'spec.center[1]' },
+			{ center: [0, 91], errorMessage: 'spec.center[1]' },
+			{ center: [0, 0, -1], errorMessage: 'spec.center[2]' },
+			{ center: [0, 0, 2.5], errorMessage: 'spec.center[2]' },
+		].forEach(({ center, errorMessage }) => {
+			expect(() => isTileJSONSpecification({ ...validVectorSpec, center })).toThrow(errorMessage);
+		});
+	});
+
+	it('should accept a three-element center with a zoom value', () => {
+		expect(isTileJSONSpecification({ ...validVectorSpec, center: [0, 0, 7] })).toBe(true);
+	});
+
+	describe('real-world TileJSONs from tiles.versatiles.org', () => {
+		const fixtureDir = join(dirname(fileURLToPath(import.meta.url)), 'fixtures/tilejson');
+		const fixtures = readdirSync(fixtureDir).filter((f) => f.endsWith('.json'));
+
+		it.each(fixtures)('should accept %s', (file) => {
+			const spec = JSON.parse(readFileSync(join(fixtureDir, file), 'utf8')) as unknown;
+			expect(isTileJSONSpecification(spec)).toBe(true);
+		});
+	});
+
+	describe('check every property', () => {
+		[
+			['tiles', 'a non-empty array of strings', ['url'], 'url', [], [1], 1],
+			['attribution', 'a string if present', 'valid', 1],
+			['bounds', 'an array of four numbers if present', [1, 2, 3, 4], ['1', '2', '3', '4'], [1, 2, 3], [], 'invalid'],
+			['center', 'an array of two or three numbers if present', [1, 2], ['1', '2'], [1, 2, 3, 4], [], 'invalid'],
+			['data', 'an array of strings if present', ['url'], 'url', [1], 1],
+			['description', 'a string if present', 'valid', 1],
+			['fillzoom', 'a positive integer if present', 5, 'invalid', -1],
+			['grids', 'an array of strings if present', ['1', '2', '3', '4'], [1, 2, 3, 4], 'invalid'],
+			['legend', 'a string if present', 'valid', 1],
+			['maxzoom', 'a positive integer if present', 5, 'invalid', -1],
+			['minzoom', 'a positive integer if present', 5, 'invalid', -1],
+			['name', 'a string if present', 'valid', 1],
+			['scheme', '"tms" or "xyz" if present', 'xyz', 'invalid', 1],
+			['template', 'a string if present', 'valid', 1],
+		].forEach((test) => {
+			const key = test[0] as string;
+			const errorMessage = test[1] as string;
+			const values = test.slice(2) as unknown[];
+			it(key, () => {
+				for (let i = 0; i < values.length; i++) {
+					const value = values[i];
+					if (i === 0) {
+						expect(isTileJSONSpecification({ ...validVectorSpec, [key]: value })).toBe(true);
+					} else {
+						expect(() => isTileJSONSpecification({ ...validVectorSpec, [key]: value })).toThrow(
+							`spec.${key} must be ${errorMessage}`
+						);
+					}
+				}
+			});
+		});
+	});
+});

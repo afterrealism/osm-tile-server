@@ -40,8 +40,10 @@ if [ "$ready" != true ]; then
   exit 1
 fi
 
+mapfile -t STYLES < <(node -e "console.log(Object.keys(JSON.parse(require('fs').readFileSync('$ROOT/themes/config.json','utf8')).styles).join('\n'))")
+
 for tile in 0/0/0 10/529/348 18/135536/89345; do
-  for style in standard light dark natural; do
+  for style in "${STYLES[@]}"; do
     name=${tile//\//-}-$style
     curl -fsS "http://127.0.0.1:$PORT/styles/$style/$tile.png" \
       -o "$TMP/$name.png"
@@ -49,6 +51,6 @@ for tile in 0/0/0 10/529/348 18/135536/89345; do
   done
 done
 
-test "$(sha256sum "$TMP/18-135536-89345-"*.png | cut -d' ' -f1 | sort -u | wc -l)" = 4
+test "$(sha256sum "$TMP/18-135536-89345-"*.png | cut -d' ' -f1 | sort -u | wc -l)" = "${#STYLES[@]}"
 
-echo "PMTiles-only four-style stack is valid"
+echo "PMTiles-only ${#STYLES[@]}-style stack is valid"

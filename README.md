@@ -1,11 +1,11 @@
 # OpenStreetMap Tile Server
 
-Full-world OpenStreetMap raster tiles rendered from one immutable PMTiles v3 archive in four local styles.
+Full-world OpenStreetMap raster tiles rendered from one immutable PMTiles v3 archive in fifteen local styles.
 
 ```text
 planet-latest.osm.pbf -> Planetiler -> openmaptiles-<sha16>.pmtiles
                                       -> TileServer GL
-                                      -> /styles/{standard,light,dark,natural}/{z}/{x}/{y}.png
+                                      -> /styles/{standard,light,dark,natural,basic,toner,fiord,liberty,openstreetmap,base,backdrop,dataviz,streets,aquarelle,toner2}/{z}/{x}/{y}.png
 ```
 
 The source PBF is a build-time input only. Local and cloud runtimes require the PMTiles archive and complete style assets.
@@ -49,6 +49,17 @@ TileServer GL serves raster PNG output on port 8080:
 | `/styles/light/{z}/{x}/{y}.png` | Positron |
 | `/styles/dark/{z}/{x}/{y}.png` | Dark Matter |
 | `/styles/natural/{z}/{x}/{y}.png` | Green OSM Bright derivative |
+| `/styles/basic/{z}/{x}/{y}.png` | MapTiler Basic (open) |
+| `/styles/toner/{z}/{x}/{y}.png` | MapTiler Toner (open) |
+| `/styles/fiord/{z}/{x}/{y}.png` | Fiord Color (open) |
+| `/styles/liberty/{z}/{x}/{y}.png` | OSM Liberty (open) |
+| `/styles/openstreetmap/{z}/{x}/{y}.png` | MapTiler OpenStreetMap (proprietary, local use only) |
+| `/styles/base/{z}/{x}/{y}.png` | MapTiler Base v4 re-authored to OpenMapTiles schema (local use only) |
+| `/styles/backdrop/{z}/{x}/{y}.png` | MapTiler Backdrop v4 re-authored (local use only) |
+| `/styles/dataviz/{z}/{x}/{y}.png` | MapTiler Dataviz v4 re-authored (local use only) |
+| `/styles/streets/{z}/{x}/{y}.png` | MapTiler Streets v4 re-authored (local use only) |
+| `/styles/aquarelle/{z}/{x}/{y}.png` | MapTiler Aquarelle v4 re-authored (local use only) |
+| `/styles/toner2/{z}/{x}/{y}.png` | MapTiler Toner v2, OpenMapTiles v3 schema (local use only) |
 
 `/health` reports readiness only after all renderer pools initialize. Every style, sprite, glyph, and tile source is local to the runtime.
 
@@ -59,8 +70,9 @@ TileServer GL serves raster PNG output on port 8080:
 - `data/openmaptiles/openmaptiles-<sha16>.pmtiles`: immutable world archive.
 - `data/openmaptiles/openmaptiles.pmtiles`: stable runtime symlink.
 - `data/openmaptiles/manifest.json`: source, artifact, and vendor provenance.
-- `data/style-assets/{standard,light,dark,natural}/`: styles, normal and retina sprites, and manifests.
+- `data/style-assets/{standard,light,dark,natural,basic,toner,fiord,liberty,openstreetmap,base,backdrop,dataviz,streets,aquarelle,toner2}/`: styles, normal and retina sprites, and manifests.
 - `data/style-assets/fonts/`: local PBF font stacks.
+- `data/v4-sources/`: fetched proprietary MapTiler v4 source styles (local use only) re-authored by `scripts/convert-maptiler-v4.mjs`; refetch with `MAPTILER_KEY=... scripts/fetch-v4-styles.sh`.
 
 Do not commit generated source, archive, style, sprite, font, manifest, or build-context files.
 

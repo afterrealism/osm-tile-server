@@ -2,10 +2,12 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
+import { STYLE_NAMES } from '../scripts/style-registry.mjs';
+
 const config = JSON.parse(readFileSync('themes/config.json', 'utf8'));
 
-test('exactly four styles, all raster-rendered from local files', () => {
-  assert.deepEqual(Object.keys(config.styles).sort(), ['dark', 'light', 'natural', 'standard']);
+test('all registry styles are raster-rendered from local files', () => {
+  assert.deepEqual(Object.keys(config.styles).sort(), [...STYLE_NAMES].sort());
   for (const style of Object.values(config.styles)) {
     assert.equal(style.serve_rendered, true);
     assert.doesNotMatch(JSON.stringify(style), /https?:\/\//);

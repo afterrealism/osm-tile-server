@@ -17,21 +17,34 @@ fi
 
 STYLE_ASSET_ROOT="$OUT" node "$ROOT/scripts/prepare-theme-assets.mjs"
 
-for pair in standard:osm-bright light:positron dark:dark-matter natural:osm-bright; do
-  name=${pair%%:*}
-  upstream=${pair##*:}
-  node "$ROOT/scripts/build-sprites.mjs" \
-    "$OUT/$name/sprite" "$ROOT/base-styles/$upstream/icons"
-  node "$ROOT/scripts/build-sprites.mjs" --retina \
-    "$OUT/$name/sprite@2x" "$ROOT/base-styles/$upstream/icons"
+while IFS=$'\t' read -r name sprite_type sprite_arg manifest_source upstream_dir local_source; do
+  if [ "$sprite_type" = build ]; then
+    node "$ROOT/scripts/build-sprites.mjs" "$OUT/$name/sprite" "$sprite_arg"
+    node "$ROOT/scripts/build-sprites.mjs" --retina "$OUT/$name/sprite@2x" "$sprite_arg"
+  else
+    for ratio in '' '@2x'; do
+      for ext in json png; do
+        cp "$sprite_arg$ratio.$ext" "$OUT/$name/sprite$ratio.$ext.part"
+        mv "$OUT/$name/sprite$ratio.$ext.part" "$OUT/$name/sprite$ratio.$ext"
+      done
+    done
+  fi
+  if [ "$upstream_dir" != "-" ]; then
+    source_ref=local-vendored
+    source_commit=$(grep '^Commit: ' "$ROOT/base-styles/$upstream_dir/UPSTREAM.md" | cut -d' ' -f2)
+  else
+    source_ref=maptiler-v4-local
+    source_commit=none
+  fi
   python3 "$ROOT/scripts/artifact_manifest.py" write \
     --kind "theme-$name" \
-    --source "$ROOT/base-styles/$upstream/style.json" \
+    --source "$manifest_source" \
     --artifact "$OUT/$name/style.json" \
-    --source-ref local-vendored \
-    --source-commit "$(grep '^Commit: ' "$ROOT/base-styles/$upstream/UPSTREAM.md" | cut -d' ' -f2)" \
-    --local-source "$ROOT/base-styles/$upstream" \
+    --source-ref "$source_ref" \
+    --source-commit "$source_commit" \
+    --local-source "$local_source" \
     --manifest "$OUT/$name/manifest.json"
-done
+done < <(STYLE_ASSET_ROOT="$OUT" node "$ROOT/scripts/prepare-theme-assets.mjs" --plan)
 
 STYLE_ASSET_ROOT="$OUT" node "$ROOT/scripts/verify-local-styles.mjs"
+node "$ROOT/scripts/validate-style-schema.mjs"

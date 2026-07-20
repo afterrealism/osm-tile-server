@@ -1,0 +1,10 @@
+dist/
+pmtiles/
+node_modules/
+junit.xml
+*.txt
+results.html
+tests/**/diff.png
+tests/**/actual.png
+tests/**/input-sorted.osm.pbf
+merged.osm.pbf

@@ -2,6 +2,8 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { STYLE_NAMES } from './style-registry.mjs';
+
 const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const assetRoot = process.env.STYLE_ASSET_ROOT ?? join(repoRoot, 'data/style-assets');
 
@@ -9,7 +11,6 @@ const REQUIRED_FILES = ['sprite.json', 'sprite.png', 'sprite@2x.json', 'sprite@2
 const FORBIDDEN = /https?:\/\/|\{key\}|maptiler/i;
 
 let failures = 0;
-const STYLE_NAMES = ['standard', 'light', 'dark', 'natural'];
 const fail = (message) => {
   console.error(`ERROR: ${message}`);
   failures += 1;
@@ -36,10 +37,15 @@ for (const name of STYLE_NAMES) {
     }
   }
   const families = new Set();
+  const FONT_NAME = /^(Inter|Noto|Nunito|Rubik|Roboto|Open Sans|Metropolis|PT Sans|Arial|Helvetica)/;
+  const collectFonts = (value) => {
+    if (typeof value === 'string') {
+      if (FONT_NAME.test(value)) families.add(value);
+    } else if (Array.isArray(value)) value.forEach(collectFonts);
+    else if (value && typeof value === 'object') Object.values(value).forEach(collectFonts);
+  };
   for (const layer of style.layers ?? []) {
-    for (const family of layer.layout?.['text-font'] ?? []) {
-      families.add(family);
-    }
+    collectFonts(layer.layout?.['text-font']);
   }
   for (const family of families) {
     if (!existsSync(join(assetRoot, 'fonts', family, '0-255.pbf'))) {

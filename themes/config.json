@@ -11,12 +11,86 @@
     "allowedHosts": "localhost,127.0.0.1"
   },
   "styles": {
-    "standard": {"style": "standard/style.json", "serve_rendered": true, "serve_data": false},
-    "light": {"style": "light/style.json", "serve_rendered": true, "serve_data": false},
-    "dark": {"style": "dark/style.json", "serve_rendered": true, "serve_data": false},
-    "natural": {"style": "natural/style.json", "serve_rendered": true, "serve_data": false}
+    "standard": {
+      "style": "standard/style.json",
+      "serve_rendered": true,
+      "serve_data": false
+    },
+    "light": {
+      "style": "light/style.json",
+      "serve_rendered": true,
+      "serve_data": false
+    },
+    "dark": {
+      "style": "dark/style.json",
+      "serve_rendered": true,
+      "serve_data": false
+    },
+    "natural": {
+      "style": "natural/style.json",
+      "serve_rendered": true,
+      "serve_data": false
+    },
+    "basic": {
+      "style": "basic/style.json",
+      "serve_rendered": true,
+      "serve_data": false
+    },
+    "toner": {
+      "style": "toner/style.json",
+      "serve_rendered": true,
+      "serve_data": false
+    },
+    "fiord": {
+      "style": "fiord/style.json",
+      "serve_rendered": true,
+      "serve_data": false
+    },
+    "liberty": {
+      "style": "liberty/style.json",
+      "serve_rendered": true,
+      "serve_data": false
+    },
+    "openstreetmap": {
+      "style": "openstreetmap/style.json",
+      "serve_rendered": true,
+      "serve_data": false
+    },
+    "base": {
+      "style": "base/style.json",
+      "serve_rendered": true,
+      "serve_data": false
+    },
+    "backdrop": {
+      "style": "backdrop/style.json",
+      "serve_rendered": true,
+      "serve_data": false
+    },
+    "dataviz": {
+      "style": "dataviz/style.json",
+      "serve_rendered": true,
+      "serve_data": false
+    },
+    "streets": {
+      "style": "streets/style.json",
+      "serve_rendered": true,
+      "serve_data": false
+    },
+    "aquarelle": {
+      "style": "aquarelle/style.json",
+      "serve_rendered": true,
+      "serve_data": false
+    },
+    "toner2": {
+      "style": "toner2/style.json",
+      "serve_rendered": true,
+      "serve_data": false
+    }
   },
   "data": {
-    "openmaptiles": {"pmtiles": "openmaptiles.pmtiles", "sparse": false}
+    "openmaptiles": {
+      "pmtiles": "openmaptiles.pmtiles",
+      "sparse": false
+    }
   }
 }

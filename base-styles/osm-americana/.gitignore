@@ -1,0 +1,10 @@
+node_modules
+sprites
+build
+.DS_Store
+.parcel-cache
+dist
+download
+local.config.js
+shieldlib/docs
+samples/

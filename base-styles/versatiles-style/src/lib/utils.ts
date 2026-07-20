@@ -1,0 +1,141 @@
+import { Color } from '../color/index.js';
+
+// Utility function to deep clone an object
+export function deepClone<T>(obj: T): T {
+	const type = typeof obj;
+	if (type !== 'object') {
+		switch (type) {
+			case 'boolean':
+			case 'number':
+			case 'string':
+			case 'undefined':
+				return obj;
+			default:
+				throw new Error(`Not implemented yet: "${type}" case`);
+		}
+	}
+
+	if (isSimpleObject(obj)) {
+		return Object.fromEntries(Object.entries(obj).map(([key, value]) => [key, deepClone(value)])) as T;
+	}
+
+	if (obj instanceof Array) {
+		return obj.map((e: unknown) => deepClone(e)) as T;
+	}
+
+	if (obj instanceof Color) {
+		return obj.clone() as T;
+	}
+
+	if (obj == null) return obj;
+
+	throw new Error(`deepClone: Unsupported object type "${Object.getPrototypeOf(obj)?.constructor?.name ?? 'unknown'}"`);
+}
+
+export function isSimpleObject(item: unknown): item is object {
+	if (item === null) return false;
+	if (typeof item !== 'object') return false;
+	if (Array.isArray(item)) return false;
+	const prototypeKeyCount: number = Object.keys(Object.getPrototypeOf(item) as object).length;
+	if (prototypeKeyCount !== 0) return false;
+	if (item.constructor.name !== 'Object') return false;
+	return true;
+}
+
+export function isBasicType(item: unknown): item is boolean | number | string | undefined {
+	switch (typeof item) {
+		case 'boolean':
+		case 'number':
+		case 'string':
+		case 'undefined':
+			return true;
+		case 'object':
+			return false;
+		default:
+			throw new Error(`isBasicType: Unknown type "${typeof item}"`);
+	}
+}
+
+export function deepMerge<T extends object>(source0: T, ...sources: Partial<T>[]): T {
+	const target: T = deepClone(source0);
+
+	for (const source of sources) {
+		if (typeof source !== 'object') continue;
+		for (const key in source) {
+			if (!(key in source)) continue;
+
+			const sourceValue = source[key] as T[typeof key];
+
+			// Handle basic types (number, string, boolean) - always overwrite
+			switch (typeof sourceValue) {
+				case 'number':
+				case 'string':
+				case 'boolean':
+					target[key] = sourceValue;
+					continue;
+				default:
+			}
+
+			// If target is a basic type, overwrite with deep clone of source
+			if (isBasicType(target[key])) {
+				target[key] = deepClone(sourceValue);
+				continue;
+			}
+
+			// Handle Color instances - clone the source color
+			if (sourceValue instanceof Color) {
+				target[key] = sourceValue.clone() as T[typeof key];
+				continue;
+			}
+
+			// If both are simple objects, merge them recursively
+			if (isSimpleObject(target[key]) && isSimpleObject(sourceValue)) {
+				target[key] = deepMerge(target[key], sourceValue);
+				continue;
+			}
+
+			// Incompatible types - throw error
+			throw new Error(
+				`deepMerge: Cannot merge incompatible types for key "${String(key)}" (target: ${typeof target[key]}, source: ${typeof sourceValue})`
+			);
+		}
+	}
+	return target;
+}
+
+export function resolveUrl(base: string, url: string): string {
+	if (!base) return url;
+	url = new URL(url, base).href;
+	url = url.replace(/%7B/gi, '{');
+	url = url.replace(/%7D/gi, '}');
+	return url;
+}
+
+export function basename(url: string): string {
+	if (!url) return '';
+	try {
+		url = new URL(url, 'http://example.org').pathname;
+	} catch (_) {
+		// ignore
+	}
+	url = url.replace(/\/+$/, '');
+	return url.split('/').pop() ?? '';
+}
+
+/**
+ * Canonicalizes an attribution string so that two semantically identical attributions
+ * (e.g. one with single-quoted attributes, the other double-quoted) become byte-identical.
+ * MapLibre's attribution control deduplicates by exact string equality, so applying this
+ * before writing into a style source lets the control collapse cosmetic duplicates.
+ *
+ * Three transformations:
+ *   - trim leading/trailing whitespace
+ *   - collapse internal whitespace runs to single spaces
+ *   - rewrite `attr='value'` to `attr="value"` (HTML standard form)
+ */
+export function normalizeAttribution(s: string): string {
+	return s
+		.trim()
+		.replace(/\s+/g, ' ')
+		.replace(/(\w+)='([^']*)'/g, '$1="$2"');
+}

@@ -3,6 +3,11 @@
 /themes/node_modules/
 __pycache__/
 
+# Proprietary MapTiler CDN assets (local use only, NEVER commit; restore with scripts/fetch-v4-styles.sh)
+/base-styles/maptiler-openstreetmap/
+/base-styles/maptiler-toner2/
+/base-styles/v4-assets/
+
 # Local infrastructure and deployment material
 /infrastructure/
 

@@ -1,0 +1,240 @@
+[
+  {
+    "name": "oakland-downtown-z4",
+    "description": "Area around downtown Oakland",
+    "tags": ["oakland", "oakland-downtown"],
+    "center": [-122.21885, 37.71324],
+    "zoom": 4
+  },
+  {
+    "name": "oakland-downtown-z5",
+    "description": "Area around downtown Oakland",
+    "tags": ["oakland", "oakland-downtown"],
+    "center": [-122.21885, 37.71324],
+    "zoom": 5
+  },
+  {
+    "name": "oakland-downtown-z6",
+    "description": "Area around downtown Oakland",
+    "tags": ["oakland", "oakland-downtown"],
+    "center": [-122.21885, 37.71324],
+    "zoom": 6
+  },
+  {
+    "name": "oakland-downtown-z7",
+    "description": "Area around downtown Oakland",
+    "tags": ["oakland", "oakland-downtown"],
+    "center": [-122.2713, 37.8043],
+    "zoom": 7
+  },
+  {
+    "name": "oakland-downtown-z8",
+    "description": "Area around downtown Oakland",
+    "tags": ["oakland", "oakland-downtown"],
+    "center": [-122.21885, 37.71324],
+    "zoom": 8
+  },
+  {
+    "name": "oakland-downtown-z9",
+    "description": "Area around downtown Oakland",
+    "tags": ["oakland", "oakland-downtown"],
+    "center": [-122.2713, 37.8043],
+    "zoom": 9
+  },
+  {
+    "name": "oakland-downtown-z10",
+    "description": "Area around downtown Oakland",
+    "tags": ["oakland", "oakland-downtown"],
+    "center": [-122.2713, 37.8043],
+    "zoom": 10
+  },
+  {
+    "name": "oakland-downtown-z11",
+    "description": "Area around downtown Oakland",
+    "tags": ["oakland", "oakland-downtown"],
+    "center": [-122.2713, 37.8043],
+    "zoom": 11
+  },
+  {
+    "name": "oakland-hills-z14",
+    "description": "Area around Oakland hills",
+    "tags": ["oakland", "oakland-hills"],
+    "center": [-122.2119, 37.9001],
+    "zoom": 14
+  },
+  {
+    "name": "oakland-hills-z13",
+    "description": "Area around Oakland hills",
+    "tags": ["oakland", "oakland-hills"],
+    "center": [-122.2119, 37.9001],
+    "zoom": 13
+  },
+  {
+    "name": "oakland-hills-z12",
+    "description": "Area around Oakland hills",
+    "tags": ["oakland", "oakland-hills"],
+    "center": [-122.2119, 37.9001],
+    "zoom": 12
+  },
+  {
+    "name": "oakland-hills-z11",
+    "description": "Area around Oakland hills",
+    "tags": ["oakland", "oakland-hills"],
+    "center": [-122.2119, 37.9001],
+    "zoom": 11
+  },
+  {
+    "name": "oakland-airport-z15",
+    "description": "Area around Oakland Airport terminals",
+    "tags": ["oakland", "oakland-airport"],
+    "center": [-122.21885, 37.71324],
+    "zoom": 15
+  },
+  {
+    "name": "oakland-airport-z14",
+    "description": "Area around Oakland Airport terminals",
+    "tags": ["oakland", "oakland-airport"],
+    "center": [-122.21885, 37.71324],
+    "zoom": 14
+  },
+  {
+    "name": "oakland-airport-z13",
+    "description": "Area around Oakland Airport terminals",
+    "tags": ["oakland", "oakland-airport"],
+    "center": [-122.21885, 37.71324],
+    "zoom": 13
+  },
+  {
+    "name": "oakland-airport-z12",
+    "description": "Area around Oakland Airport terminals",
+    "tags": ["oakland", "oakland-airport"],
+    "center": [-122.21885, 37.71324],
+    "zoom": 12
+  },
+  {
+    "name": "oakland-lake-merritt-z15",
+    "description": "Area around Oakland Lake Merritt",
+    "tags": ["oakland", "oakland-lake-merritt"],
+    "center": [-122.26467, 37.80661],
+    "zoom": 15
+  },
+  {
+    "name": "oakland-lake-merritt-z14",
+    "description": "Area around Oakland Lake Merritt",
+    "tags": ["oakland", "oakland-lake-merritt"],
+    "center": [-122.26467, 37.80661],
+    "zoom": 14
+  },
+  {
+    "name": "oakland-lake-merritt-z13",
+    "description": "Area around Oakland Lake Merritt",
+    "tags": ["oakland", "oakland-lake-merritt"],
+    "center": [-122.26467, 37.80661],
+    "zoom": 13
+  },
+  {
+    "name": "oakland-lake-merritt-z12",
+    "description": "Area around Oakland Lake Merritt",
+    "tags": ["oakland", "oakland-lake-merritt"],
+    "center": [-122.26467, 37.80661],
+    "zoom": 12
+  },
+  {
+    "name": "taiwan-z8",
+    "description": "Compare the appearance of highways",
+    "tags": ["highway", "cjk", "tw"],
+    "center": [121.333, 24.32],
+    "zoom": 8
+  },
+  {
+    "name": "taiwan-z16-buildings",
+    "description": "Compare the appearance of buildings",
+    "tags": ["building", "cjk", "tw"],
+    "center": [121.4818, 25.0271],
+    "zoom": 16
+  },
+  {
+    "name": "world",
+    "description": "Country labels",
+    "tags": [],
+    "center": [121, 25],
+    "zoom": 4
+  },
+  {
+    "name": "world2",
+    "description": "Country labels",
+    "tags": [],
+    "center": [0, 0],
+    "zoom": 2
+  },
+  {
+    "name": "zurich-bridges",
+    "description": "Pedestrian bridge tagged as area",
+    "tags": ["bridge", "ch"],
+    "center": [8.54252, 47.376925],
+    "zoom": 17
+  },
+  {
+    "name": "brazil-boundaries",
+    "description": "admin boundaries other than Brasilia should be visible at zoom 6",
+    "tags": ["boundaries"],
+    "center": [-49.092, -15.092],
+    "zoom": 6
+  },
+  {
+    "name": "kenya-boundaries",
+    "description": "admin boundaries level 5 around Nairobi should not appear broken",
+    "tags": ["boundaries"],
+    "center": [37.382, -1.592],
+    "zoom": 7
+  },
+  {
+    "name": "colombia-rivers",
+    "description": "water features west of Bogota should not be broken",
+    "tags": ["water"],
+    "center": [-74.422, 4.62],
+    "zoom": 7.8
+  },
+  {
+    "name": "river-thames",
+    "description": "River Thames should not have pieces missing",
+    "tags": ["water"],
+    "center": [-0.3, 51.4],
+    "zoom": 8.9
+  },
+  {
+    "name": "landuse-urban-green",
+    "description": "show village_green, allotments, playgrounds",
+    "tags": [],
+    "center": [7.3217, 51.50406],
+    "zoom": 15
+  },
+  {
+    "name": "san-francisco-piers",
+    "description": "piers in the roads layer are rendered",
+    "tags": ["roads"],
+    "center": [-122.440512, 37.807891],
+    "zoom": 16
+  },
+  {
+    "name": "edwards-afb",
+    "description": "edwards air force base runways",
+    "tags": ["landuse"],
+    "center": [-118.0726, 34.8328],
+    "zoom": 10
+  },
+  {
+    "name": "island-names",
+    "description": "label the names of prominent islands at zoom 7",
+    "tags": ["earth"],
+    "center": [-123.22, 48.111],
+    "zoom": 7
+  },
+  {
+    "name": "nyc-tunnels",
+    "description": "Highway and major road tunnels should have dashed strokes",
+    "tags": ["roads", "tunnels"],
+    "center": [-73.9684, 40.747621],
+    "zoom": 17
+  }
+]

@@ -1,0 +1,21 @@
+{
+	"compilerOptions": {
+		"lib": ["ESNext", "DOM"],
+		"module": "ESNext",
+		"moduleResolution": "bundler",
+		"target": "ES2022",
+		"strict": true,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"forceConsistentCasingInFileNames": true,
+		"allowJs": true,
+		"allowImportingTsExtensions": false,
+		"noEmit": true,
+		"sourceMap": true,
+		"paths": {
+			"@versatiles/style": ["./src/index.ts"]
+		}
+	},
+	"include": ["rollup.config.*", "scripts/**/*.ts", "src/**/*.ts"],
+	"exclude": ["dev/**/*.ts"]
+}

@@ -11,6 +11,13 @@ declare -A EXPECTED=(
   [planetiler]=0e5588c4a6e8c29a270a33afe8df62027d889604
   [planetiler-openmaptiles]=5be22807170439320354b39ed9b390aa796a2cee
   [tileserver-gl]=000c365f3d6948733355be167f09d5585697c4c6
+  [maptiler-basic]=2374f74bc8b8d3dc3c38ec0ff844f0dfeef37c9f
+  [maptiler-toner]=d6bce886f4dd77d55804dec56088affb23046cec
+  [fiord-color]=a7faefb06d6bed62c1fa05b45ac20d90051067ed
+  [osm-liberty]=cca1adefc6723ed2c6ce334fb8912920841daa48
+  [protomaps-basemaps]=e6d65ec17e47a9ddefc1e8b39005152f7c0aa24a
+  [versatiles-style]=4d6c8882d73475fbb556ec250f3f6788c3a08203
+  [osm-americana]=dddb072aad1ba2efb2332277ff53cc72f0bcbc65
 )
 
 for name in "${!EXPECTED[@]}"; do
