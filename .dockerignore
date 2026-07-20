@@ -1,0 +1,7 @@
+/docker-compose.yml
+/LICENSE
+/Makefile
+/README.md
+/data/
+/database/
+/tests/

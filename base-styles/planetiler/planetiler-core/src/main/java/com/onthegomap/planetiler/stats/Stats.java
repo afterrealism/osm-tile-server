@@ -1,0 +1,283 @@
+package com.onthegomap.planetiler.stats;
+
+import static io.prometheus.client.Collector.NANOSECONDS_PER_SECOND;
+
+import com.onthegomap.planetiler.collection.FeatureGroup;
+import com.onthegomap.planetiler.config.PlanetilerConfig;
+import com.onthegomap.planetiler.geo.TileCoord;
+import com.onthegomap.planetiler.util.FileUtils;
+import com.onthegomap.planetiler.util.Format;
+import com.onthegomap.planetiler.util.LogUtil;
+import com.onthegomap.planetiler.util.MemoryEstimator;
+import java.nio.file.Path;
+import java.time.Duration;
+import java.util.Base64;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.function.LongSupplier;
+import java.util.function.Supplier;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.io.WKBWriter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * A utility that collects and reports more detailed statistics about the JVM and running tasks than logs can convey.
+ * <p>
+ * {@link #inMemory()} stores basic stats in-memory to report at the end of the job and
+ * {@link #prometheusPushGateway(String, String, Duration)} pushes stats at a regular interval to a
+ * <a href="https://github.com/prometheus/pushgateway">prometheus push gateway</a>.
+ */
+public interface Stats extends AutoCloseable {
+  Logger LOGGER = LoggerFactory.getLogger(Stats.class);
+
+  /** Returns a new stat collector that stores basic stats in-memory to report through {@link #printSummary()}. */
+  static Stats inMemory() {
+    var stats = new InMemory();
+    DefaultStats.set(stats);
+    return stats;
+  }
+
+  /**
+   * Returns a new stat collector pushes stats at a regular interval to a
+   * <a href="https://github.com/prometheus/pushgateway">prometheus push gateway</a> at {@code destination}.
+   */
+  static Stats prometheusPushGateway(String destination, String job, Duration interval) {
+    var stats = PrometheusStats.createAndStartPushing(destination, job, interval);
+    DefaultStats.set(stats);
+    return stats;
+  }
+
+  /**
+   * Logs top-level stats at the end of a job like the amount of user and CPU time that each task has taken, and size of
+   * each monitored file.
+   */
+  default void printSummary() {
+    Format format = Format.defaultInstance();
+    Logger logger = LoggerFactory.getLogger(getClass());
+    if (logger.isInfoEnabled()) {
+      logger.info("");
+      logger.info("-".repeat(40));
+      logger.info("data errors:");
+      dataErrors().entrySet().stream()
+        .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+        .forEachOrdered(entry -> logger.info("\t{}\t{}", entry.getKey(), format.integer(entry.getValue())));
+      logger.info("-".repeat(40));
+      timers().printSummary();
+      logger.info("-".repeat(40));
+      for (var entry : monitoredFiles().entrySet()) {
+        long size = entry.getValue().sizeProvider().getAsLong();
+        if (size > 0) {
+          logger.info("\t{}\t{}B", entry.getKey(), format.storage(size, false));
+        }
+      }
+    }
+  }
+
+  /**
+   * Records that a long-running task with {@code name} has started and returns a handle to call when finished.
+   * <p>
+   * Also sets the "stage" prefix that shows up in the logs to {@code name}.
+   */
+  default Timers.Finishable startStage(String name) {
+    return startStage(name, true);
+  }
+
+  /**
+   * Same as {@link #startStage(String)} except does not log that it started, or set the logging prefix.
+   */
+  default Timers.Finishable startStageQuietly(String name) {
+    return startStage(name, false);
+  }
+
+  /**
+   * Records that a long-running task with {@code name} has started and returns a handle to call when finished.
+   * <p>
+   * Also sets the "stage" prefix that shows up in the logs to {@code name} if {@code log} is true.
+   */
+  default Timers.Finishable startStage(String name, boolean log) {
+    if (log) {
+      LogUtil.setStage(name);
+    }
+    var timer = timers().startTimer(name, log);
+    return new Timers.Finishable() {
+      @Override
+      public void stop() {
+        timer.stop();
+      }
+
+      @Override
+      public ProcessTime elapsed() {
+        return timer.elapsed();
+      }
+    };
+  }
+
+  /**
+   * Records that {@code numFeatures} features have been rendered to an output {@code layer} while processing a data
+   * source.
+   */
+  void emittedFeatures(int z, String layer, int numFeatures);
+
+  /** Records that an input element was processed and emitted some output features in {@code layer}. */
+  void processedElement(String elemType, String layer, int zoom);
+
+  /** Records that a tile has been written to the archive output where compressed size is {@code bytes}. */
+  void wroteTile(int zoom, int bytes);
+
+  /** Returns the timers for all stages started with {@link #startStage(String)}. */
+  Timers timers();
+
+  /** Returns all the files being monitored. */
+  Map<String, MonitoredFile> monitoredFiles();
+
+  /** Adds a stat that will track the size of a file or directory located at {@code path}. */
+  default void monitorFile(String name, Path path) {
+    monitorFile(name, path, null);
+  }
+
+  default void monitorFile(String name, Path path, LongSupplier sizeProvider) {
+    if (path != null) {
+      monitoredFiles().put(name, new MonitoredFile(path, sizeProvider));
+    }
+  }
+
+
+  /** Adds a stat that will track the estimated in-memory size of {@code object}. */
+  void monitorInMemoryObject(String name, MemoryEstimator.HasEstimate object);
+
+  /** Tracks a stat with {@code name} that always has a constant {@code value}. */
+  default void gauge(String name, Number value) {
+    gauge(name, () -> value);
+  }
+
+  /** Tracks a stat with {@code name} that can go up or down over time. */
+  void gauge(String name, Supplier<Number> value);
+
+  /** Tracks a stat with {@code name} that should only go up over time. */
+  void counter(String name, Supplier<Number> supplier);
+
+  /**
+   * Returns and starts tracking a new counter with {@code name} optimized for the caller to increment from multiple
+   * threads.
+   */
+  default Counter.MultiThreadCounter longCounter(String name) {
+    Counter.MultiThreadCounter counter = Counter.newMultiThreadCounter();
+    counter(name, counter::get);
+    return counter;
+  }
+
+  /**
+   * Returns and starts tracking a new counter where the value should be treated as number of milliseconds.
+   */
+  default Counter.MultiThreadCounter nanoCounter(String name) {
+    Counter.MultiThreadCounter counter = Counter.newMultiThreadCounter();
+    counter(name, () -> counter.get() / NANOSECONDS_PER_SECOND);
+    return counter;
+  }
+
+  /**
+   * Tracks a group of counters with a {@code label} key that is set to the key in each entry of the map returned from
+   * {@code values}.
+   */
+  void counter(String name, String label, Supplier<Map<String, LongSupplier>> values);
+
+  /** Returns all the data error counters. */
+  Map<String, Long> dataErrors();
+
+  /**
+   * Records that an invalid input feature was discarded where {@code errorCode} can be used to identify the kind of
+   * failure.
+   */
+  default void dataError(String errorCode) {
+    dataErrors().merge(errorCode, 1L, Long::sum);
+  }
+
+  /**
+   * Records that an invalid input feature was discarded and if {@link PlanetilerConfig#logJtsExceptions()} is enabled
+   * it will print the current tile being processed and also the input geometry.
+   */
+  default void dataError(String errorCode, String other, Geometry input) {
+    dataError(errorCode);
+
+    TileCoord coord = FeatureGroup.getCurrentTileForDebugging();
+    if (coord != null) {
+      LOGGER.info("{} on {} {} for wkb: {}", errorCode, coord, other,
+        Base64.getEncoder().encodeToString(new WKBWriter().write(input)));
+    }
+  }
+
+  /**
+   * A stat collector that stores top-level metrics in-memory to report through {@link #printSummary()}.
+   * <p>
+   * Returns counters for the code to use, but doesn't keep a central listing of them.
+   */
+  class InMemory implements Stats {
+
+    /** use {@link #inMemory()} */
+    private InMemory() {}
+
+    private final Timers timers = new Timers();
+    private final Map<String, MonitoredFile> monitoredFiles = new ConcurrentSkipListMap<>();
+    private final Map<String, Long> dataErrors = new ConcurrentHashMap<>();
+
+    @Override
+    public void wroteTile(int zoom, int bytes) {}
+
+    @Override
+    public Timers timers() {
+      return timers;
+    }
+
+    @Override
+    public Map<String, MonitoredFile> monitoredFiles() {
+      return monitoredFiles;
+    }
+
+    @Override
+    public void monitorInMemoryObject(String name, MemoryEstimator.HasEstimate object) {}
+
+    @Override
+    public void counter(String name, Supplier<Number> supplier) {}
+
+    @Override
+    public Counter.MultiThreadCounter longCounter(String name) {
+      return Counter.newMultiThreadCounter();
+    }
+
+    @Override
+    public Counter.MultiThreadCounter nanoCounter(String name) {
+      return Counter.newMultiThreadCounter();
+    }
+
+    @Override
+    public void counter(String name, String label, Supplier<Map<String, LongSupplier>> values) {}
+
+    @Override
+    public Map<String, Long> dataErrors() {
+      return dataErrors;
+    }
+
+    @Override
+    public void processedElement(String elemType, String layer, int zoom) {}
+
+    @Override
+    public void gauge(String name, Supplier<Number> value) {}
+
+    @Override
+    public void emittedFeatures(int z, String layer, int numFeatures) {}
+
+    @Override
+    public void close() {
+
+    }
+  }
+
+  record MonitoredFile(Path path, LongSupplier sizeProvider) {
+    public MonitoredFile(Path path, LongSupplier sizeProvider) {
+      this.path = path;
+      this.sizeProvider = sizeProvider != null ? sizeProvider : () -> FileUtils.size(path);
+    }
+  }
+}

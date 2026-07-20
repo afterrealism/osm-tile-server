@@ -1,0 +1,70 @@
+services:
+  database:
+    build: ./database
+    image: afterrealism/osm-tile-database:pg18
+    shm_size: 256mb
+    environment:
+      POSTGRES_DB: gis
+      POSTGRES_USER: renderer
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-renderer}
+      PGDATA: /var/lib/postgresql/18/docker
+    volumes:
+      - ./data/postgres18:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  map:
+    build: .
+    image: afterrealism/osm-tile-server:local
+    shm_size: 128mb
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      PGHOST: database
+      PGPORT: 5432
+      PGDATABASE: gis_carto_v6
+      PGUSER: renderer
+      PGPASSWORD: ${POSTGRES_PASSWORD:-renderer}
+      DATABASE_STATE_DIR: /data/database18-carto-v6-state
+    volumes:
+      - ./data:/data
+    ports:
+      - "8080:80"
+    command: "run"
+
+  themes:
+    build: ./base-styles/tileserver-gl
+    image: afterrealism/tileserver-gl:v5.6.0-local
+    environment:
+      BIND: 0.0.0.0
+      PORT: 8080
+      STYLE_ASSET_ROOT: /data/style-assets
+    volumes:
+      - ./data:/data:ro
+      - ./themes/config.json:/data/config.json:ro
+      - ./base-styles:/workspace/base-styles:ro
+      - ./scripts:/workspace/scripts:ro
+      - ./themes/start.sh:/workspace/themes/start.sh:ro
+    entrypoint: [/workspace/themes/start.sh]
+    healthcheck:
+      test: ["CMD", "node", "/usr/src/app/src/healthcheck.js"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  planetiler:
+    build:
+      context: ./base-styles
+      dockerfile: planetiler-openmaptiles/Dockerfile
+    image: afterrealism/planetiler-openmaptiles:v3.16-local
+    profiles: [tools]
+    environment:
+      JAVA_TOOL_OPTIONS: -Xmx4g
+    volumes:
+      - ./data:/data
+      - ./:/workspace:ro
+    entrypoint: [/workspace/scripts/build-openmaptiles.sh]

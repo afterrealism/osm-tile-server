@@ -1,0 +1,21 @@
+{
+  "options": {
+    "paths": {
+      "root": "/data",
+      "styles": "style-assets",
+      "fonts": "style-assets/fonts",
+      "sprites": "style-assets",
+      "mbtiles": "openmaptiles"
+    },
+    "frontPage": false,
+    "allowedHosts": "localhost"
+  },
+  "styles": {
+    "light": {"style": "light/style.json", "serve_rendered": true, "serve_data": false},
+    "dark": {"style": "dark/style.json", "serve_rendered": true, "serve_data": false},
+    "natural": {"style": "natural/style.json", "serve_rendered": true, "serve_data": false}
+  },
+  "data": {
+    "openmaptiles": {"mbtiles": "openmaptiles.mbtiles", "sparse": false}
+  }
+}

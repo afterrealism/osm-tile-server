@@ -1,0 +1,25 @@
+/data/*
+!/data/.gitkeep
+/themes/node_modules/
+__pycache__/
+
+# Local infrastructure and deployment material
+/infrastructure/
+
+# Local agent and LLM working files
+AGENTS.md
+CLAUDE.md
+CODEX.md
+GEMINI.md
+.cursorrules
+.cursor/
+.claude/
+.opencode/
+opencode.json
+opencode.jsonc
+.github/copilot-instructions.md
+.github/instructions/
+.github/prompts/
+/docs/superpowers/
+/docs/plans/
+/review/
