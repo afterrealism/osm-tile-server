@@ -797,10 +797,14 @@ async function respondImage(
           }
 
           if (!res.headersSent) {
-            res.set({
+            const headers = {
               'Last-Modified': item.lastModified,
               'Content-Type': `image/${format}`,
-            });
+            };
+            if (process.env.TILE_CACHE_CONTROL) {
+              headers['Cache-Control'] = process.env.TILE_CACHE_CONTROL;
+            }
+            res.set(headers);
             return res.status(200).send(buffer);
           }
         });

@@ -9,3 +9,5 @@ Local modifications: None at initial vendoring.
 startup); pinned builder-stage npm to v10 (`--build-from-source` was removed in
 npm 11 and install-scripts are gated there).
 Upstream pushes: Prohibited; changes are maintained only in this repository.
+2026-07-20: src/serve_rendered.js: opt-in Cache-Control response header on
+rendered tiles when TILE_CACHE_CONTROL is set.
