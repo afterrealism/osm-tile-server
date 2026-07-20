@@ -1,143 +1,90 @@
 # OpenStreetMap Tile Server
 
-Docker Compose stack for importing OpenStreetMap `.osm.pbf` data and serving raster XYZ tiles in four styles.
+Full-world OpenStreetMap raster tiles rendered from one immutable PMTiles v3 archive in four local styles.
 
 ```text
-PostgreSQL 18 + PostGIS 3.6
-             ↑
-osm2pgsql flex / OpenStreetMap Carto v6 / Mapnik / renderd / Apache mod_tile (standard)
-Planetiler OpenMapTiles + TileServer GL (light, dark, natural)
-             ↓
-http://localhost:8080/tile/{standard,light,dark,natural}/{z}/{x}/{y}.png
+planet-latest.osm.pbf -> Planetiler -> openmaptiles-<sha16>.pmtiles
+                                      -> TileServer GL
+                                      -> /styles/{standard,light,dark,natural}/{z}/{x}/{y}.png
 ```
 
-Public output is raster PNG only, served on four named endpoints:
+The source PBF is a build-time input only. Local and cloud runtimes require the PMTiles archive and complete style assets.
 
-| Route | Style | Renderer |
-|---|---|---|
-| `/tile/standard/{z}/{x}/{y}.png` | OpenStreetMap Carto v6 | Mapnik/renderd |
-| `/tile/light/{z}/{x}/{y}.png` | Positron derivative | TileServer GL |
-| `/tile/dark/{z}/{x}/{y}.png` | Dark Matter derivative | TileServer GL |
-| `/tile/natural/{z}/{x}/{y}.png` | Green OSM Bright derivative | TileServer GL |
+## Requirements
 
-The unnamed `/tile/{z}/{x}/{y}.png` route returns `404`. The server root returns `403`; there is no demo UI.
+- Java 21 and the vendored Planetiler OpenMapTiles v3.16 profile.
+- Node.js 20 or newer for style generation.
+- Docker Compose or Podman Compose.
+- Free build disk of at least 10 times the planet PBF size.
+- Total system RAM of at least half the planet PBF size.
 
-## Storage
+The low-memory build profile uses mmap storage, an array node map, and a 20 GiB JVM heap. A current full-planet build should have approximately 1 TiB of free disk and at least 48 GiB RAM available before download.
 
-All persistent files remain under `data/` and are ignored by Git:
+## Build And Run
 
-| Path | Contents |
+Run the complete workflow from the repository root:
+
+```bash
+make build
+make fetch-planet
+make check-capacity
+make build-pmtiles
+make assets
+make run
+curl --fail http://localhost:8080/health
+curl --fail --output tile.png http://localhost:8080/styles/standard/10/529/348.png
+```
+
+Make defaults to Docker. Use `make CONTAINER_ENGINE=podman <target>` when running Podman.
+
+Downloads and generated archives remain under ignored `data/` paths. They are written through temporary `.part` paths, validated, and then published atomically. The final archive is content-versioned as `data/openmaptiles/openmaptiles-<sha16>.pmtiles`; `data/openmaptiles/openmaptiles.pmtiles` is a stable relative symlink.
+
+## Routes
+
+TileServer GL serves raster PNG output on port 8080:
+
+| Route | Style source |
 |---|---|
-| `data/postgres18/` | PostgreSQL 18 cluster (`gis` rollback DB and `gis_carto_v6`) |
-| `data/database18-state/` | Retained Carto v5 import markers and replication state |
-| `data/database18-carto-v6-state/` | Carto v6 import markers, replication state, manifest |
-| `data/generated/carto-v6/` | Compiled `mapnik.xml` and external cartographic datasets |
-| `data/openmaptiles/` | `openmaptiles.mbtiles` and its manifest |
-| `data/style-assets/` | Localized styles, sprites, PBF fontstacks, manifests |
-| `data/region.osm.pbf` | Retained OSM source extract |
-| `data/region.poly` | Retained extract boundary |
-| `data/style/` | Retained Carto v5 style (rollback) |
-| `data/tiles/` | Rendered PNG cache (`data/tiles/standard/` for Carto v6) |
+| `/styles/standard/{z}/{x}/{y}.png` | OSM Bright |
+| `/styles/light/{z}/{x}/{y}.png` | Positron |
+| `/styles/dark/{z}/{x}/{y}.png` | Dark Matter |
+| `/styles/natural/{z}/{x}/{y}.png` | Green OSM Bright derivative |
 
-An existing PostgreSQL 15 cluster under `data/database/` is not mounted by this stack. Follow [`database/UPGRADE.md`](database/UPGRADE.md) before deleting it.
+`/health` reports readiness only after all renderer pools initialize. Every style, sprite, glyph, and tile source is local to the runtime.
 
-## Build And Import
+## Generated Data
 
-Docker:
+- `data/planet/planet-<sha16>.osm.pbf`: checksummed official source snapshot.
+- `data/planet.osm.pbf`: stable relative source symlink used only by the build service.
+- `data/openmaptiles/openmaptiles-<sha16>.pmtiles`: immutable world archive.
+- `data/openmaptiles/openmaptiles.pmtiles`: stable runtime symlink.
+- `data/openmaptiles/manifest.json`: source, artifact, and vendor provenance.
+- `data/style-assets/{standard,light,dark,natural}/`: styles, normal and retina sprites, and manifests.
+- `data/style-assets/fonts/`: local PBF font stacks.
 
-```sh
-docker compose build
-docker compose --profile tools build planetiler
-docker compose up -d database
-docker compose run --rm map import
-docker compose --profile tools run --rm planetiler
-node scripts/prepare-theme-assets.mjs
-node scripts/verify-local-styles.mjs
-docker compose up -d map themes
-```
+Do not commit generated source, archive, style, sprite, font, manifest, or build-context files.
 
-Podman: replace `docker` with `podman`.
+## Cloud Run
 
-Theme assets additionally require the sprite/font tooling once per checkout:
+The existing deployment uses project `scheece-dev-20260701`, region `asia-southeast1`, service `tileserver`, and domain <https://tiles.geocanvas.dev>. The runtime image embeds style assets and validators. A private `tiles-geocanvas-dev` bucket supplies one immutable PMTiles object through a read-only Cloud Storage volume.
 
-```sh
-npm ci --prefix themes
-node scripts/build-sprites.mjs data/style-assets/light/sprite base-styles/positron/icons
-node scripts/build-sprites.mjs --retina data/style-assets/light/sprite@2x base-styles/positron/icons
-# repeat for dark (dark-matter) and natural (osm-bright)
-```
+Cloud Run uses an HTTP `/health` startup probe so requests are admitted only after renderer initialization. Build, upload, deployment, acceptance, update, and rollback procedures are documented in [`gcp/README.md`](gcp/README.md).
 
-Without a source file, the import downloads Luxembourg. To select another Geofabrik extract:
+## Verification
 
-```sh
-DOWNLOAD_PBF=https://download.geofabrik.de/europe/germany-latest.osm.pbf \
-DOWNLOAD_POLY=https://download.geofabrik.de/europe/germany.poly \
-docker compose run --rm -e DOWNLOAD_PBF -e DOWNLOAD_POLY map import
-```
+Run fast source and configuration checks:
 
-Downloads and generated archives use temporary `.part` files and replace the retained artifact only after completion. Repeating a completed import is non-destructive. The Planetiler build needs at least 4 GiB of JVM heap (`JAVA_TOOL_OPTIONS`) plus several times the PBF size in free disk; larger regions require increasing both.
-
-## Serve Tiles
-
-```sh
-curl --fail --output tile.png \
-  http://localhost:8080/tile/standard/18/135536/89345.png
-```
-
-Standard keeps serving when the `themes` service is unavailable; the three themed routes then return `503`.
-
-## Configuration
-
-Compose supplies these database variables to the map container:
-
-| Variable | Default |
-|---|---|
-| `PGHOST` | `database` |
-| `PGPORT` | `5432` |
-| `PGDATABASE` | `gis_carto_v6` |
-| `PGUSER` | `renderer` |
-| `PGPASSWORD` | `${POSTGRES_PASSWORD:-renderer}` |
-| `DATABASE_STATE_DIR` | `/data/database18-carto-v6-state` |
-
-Set `POSTGRES_PASSWORD` in the shell or a local `.env` file before starting Compose to replace the development default.
-
-Other supported map variables include `THREADS`, `ALLOW_CORS`, `UPDATES`, `FLAT_NODES`, `OSM2PGSQL_EXTRA_ARGS`, `REPLICATION_URL`, `MAX_INTERVAL_SECONDS`, and the `EXPIRY_*` settings.
-
-When automatic updates are enabled, provide both `region.osm.pbf` and `region.poly` from the same extract.
-
-## Operations
-
-Inspect the database version:
-
-```sh
-docker compose exec database psql -U renderer -d gis_carto_v6 -Atc \
-  "SELECT current_setting('server_version_num'), postgis_full_version();"
-```
-
-Stop the stack without deleting data:
-
-```sh
-docker compose down
-```
-
-Run fast configuration checks:
-
-```sh
+```bash
 make test-config
 ```
 
-Run the disposable full multi-style integration test:
+After building the world archive and assets, run the local integration and staged cloud-image checks:
 
-```sh
-make test
+```bash
+make CONTAINER_ENGINE=podman test
+CONTAINER_ENGINE=podman ./tests/gcp-image.sh
 ```
-
-The integration test imports the sample into a temporary container volume and removes that volume afterward.
 
 ## Attribution
 
 Maps rendered from these tiles must visibly credit `© OpenStreetMap contributors` with a link to the Open Database License (<https://opendatacommons.org/licenses/odbl/>).
-
-## Project Origin
-
-This project was originally forked from [Overv/openstreetmap-tile-server](https://github.com/Overv/openstreetmap-tile-server) and is now maintained as a standalone repository with independent history.
