@@ -19,6 +19,7 @@ function readStyle(name) {
 
 for (const name of STYLE_NAMES) {
   test(`${name} style is fully local`, () => {
+    assert.match(name, /^[a-z]+$/);
     const style = readStyle(name);
     assert.equal(style.sources.openmaptiles.url, 'pmtiles://openmaptiles');
     assert.equal(style.glyphs, '{fontstack}/{range}.pbf');
@@ -27,17 +28,17 @@ for (const name of STYLE_NAMES) {
   });
 }
 
-test('standard style preserves the OSM Bright palette', () => {
-  const standard = readStyle('standard');
-  const standardPaint = Object.fromEntries(
-    standard.layers.map((layer) => [layer.id, layer.paint ?? {}]),
+test('atlas style preserves the OSM Bright palette', () => {
+  const atlas = readStyle('atlas');
+  const atlasPaint = Object.fromEntries(
+    atlas.layers.map((layer) => [layer.id, layer.paint ?? {}]),
   );
-  assert.equal(standardPaint.background['background-color'], '#f8f4f0');
-  assert.equal(standardPaint['landcover-wood']['fill-color'], '#6a4');
+  assert.equal(atlasPaint.background['background-color'], '#f8f4f0');
+  assert.equal(atlasPaint['landcover-wood']['fill-color'], '#6a4');
 });
 
-test('natural style has the green terrain palette', () => {
-  const style = readStyle('natural');
+test('terra style has the green terrain palette', () => {
+  const style = readStyle('terra');
   assert.equal(style.name, 'Natural');
   const paint = Object.fromEntries(style.layers.map((layer) => [layer.id, layer.paint ?? {}]));
   assert.equal(paint.background['background-color'], '#e8eadf');

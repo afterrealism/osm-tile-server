@@ -11,78 +11,78 @@
     "allowedHosts": "localhost,127.0.0.1"
   },
   "styles": {
-    "standard": {
-      "style": "standard/style.json",
+    "atlas": {
+      "style": "atlas/style.json",
       "serve_rendered": true,
       "serve_data": false
     },
-    "light": {
-      "style": "light/style.json",
+    "paper": {
+      "style": "paper/style.json",
       "serve_rendered": true,
       "serve_data": false
     },
-    "dark": {
-      "style": "dark/style.json",
+    "onyx": {
+      "style": "onyx/style.json",
       "serve_rendered": true,
       "serve_data": false
     },
-    "natural": {
-      "style": "natural/style.json",
+    "terra": {
+      "style": "terra/style.json",
       "serve_rendered": true,
       "serve_data": false
     },
-    "basic": {
-      "style": "basic/style.json",
+    "nova": {
+      "style": "nova/style.json",
       "serve_rendered": true,
       "serve_data": false
     },
-    "toner": {
-      "style": "toner/style.json",
+    "graphite": {
+      "style": "graphite/style.json",
       "serve_rendered": true,
       "serve_data": false
     },
-    "fiord": {
-      "style": "fiord/style.json",
+    "fjord": {
+      "style": "fjord/style.json",
       "serve_rendered": true,
       "serve_data": false
     },
-    "liberty": {
-      "style": "liberty/style.json",
+    "meridian": {
+      "style": "meridian/style.json",
       "serve_rendered": true,
       "serve_data": false
     },
-    "openstreetmap": {
-      "style": "openstreetmap/style.json",
+    "community": {
+      "style": "community/style.json",
       "serve_rendered": true,
       "serve_data": false
     },
-    "base": {
-      "style": "base/style.json",
+    "canvas": {
+      "style": "canvas/style.json",
       "serve_rendered": true,
       "serve_data": false
     },
-    "backdrop": {
-      "style": "backdrop/style.json",
+    "mist": {
+      "style": "mist/style.json",
       "serve_rendered": true,
       "serve_data": false
     },
-    "dataviz": {
-      "style": "dataviz/style.json",
+    "prism": {
+      "style": "prism/style.json",
       "serve_rendered": true,
       "serve_data": false
     },
-    "streets": {
-      "style": "streets/style.json",
+    "avenue": {
+      "style": "avenue/style.json",
       "serve_rendered": true,
       "serve_data": false
     },
-    "aquarelle": {
-      "style": "aquarelle/style.json",
+    "watercolor": {
+      "style": "watercolor/style.json",
       "serve_rendered": true,
       "serve_data": false
     },
-    "toner2": {
-      "style": "toner2/style.json",
+    "ink": {
+      "style": "ink/style.json",
       "serve_rendered": true,
       "serve_data": false
     }
