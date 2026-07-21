@@ -29,6 +29,10 @@ services:
     profiles: [tools]
     environment:
       JAVA_TOOL_OPTIONS: ${JAVA_TOOL_OPTIONS:--Xmx20g -XX:MaxHeapFreeRatio=40}
+      BUILDING_MERGE_Z13: ${BUILDING_MERGE_Z13:-false}
+      REUSE_FEATUREDB: ${REUSE_FEATUREDB:-false}
+      SORT_MAX_READERS: ${SORT_MAX_READERS:-12}
+      SORT_MAX_WRITERS: ${SORT_MAX_WRITERS:-12}
     volumes:
       - ./data:/data
       - ./:/workspace:ro

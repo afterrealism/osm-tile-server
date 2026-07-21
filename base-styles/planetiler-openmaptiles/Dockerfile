@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM maven:3.9.11-eclipse-temurin-21 AS build
 RUN apt-get update \
  && apt-get install -y --no-install-recommends git \
@@ -6,7 +7,8 @@ RUN apt-get update \
 WORKDIR /src/planetiler
 COPY planetiler/ .
 COPY planetiler-openmaptiles/ ./planetiler-openmaptiles/
-RUN git init \
+RUN --mount=type=cache,target=/root/.m2 \
+ git init \
  && git config user.email build@local \
  && git config user.name build \
  && git add . \

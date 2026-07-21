@@ -13,6 +13,19 @@ if ! flock -n 9; then
 fi
 rm -f "$PART"
 
+WIKIDATA_ARGS=()
+if [ ! -s "$OUT/sources/wikidata_names.json" ]; then
+  WIKIDATA_ARGS=(--fetch-wikidata)
+fi
+
+BUILD_ARGS=()
+if [ "${BUILDING_MERGE_Z13:-false}" != true ]; then
+  BUILD_ARGS+=(--building-merge-z13=false)
+fi
+if [ "${REUSE_FEATUREDB:-false}" = true ]; then
+  BUILD_ARGS+=(--reuse_featuredb)
+fi
+
 java -jar /app/planetiler-openmaptiles.jar \
   --osm_path="$SOURCE" \
   --download_dir="$OUT/sources" \
@@ -20,7 +33,10 @@ java -jar /app/planetiler-openmaptiles.jar \
   --output="$PART?format=pmtiles" \
   --storage=mmap \
   --nodemap-type=array \
-  --fetch-wikidata \
+  --sort_max_readers="${SORT_MAX_READERS:-12}" \
+  --sort_max_writers="${SORT_MAX_WRITERS:-12}" \
+  "${WIKIDATA_ARGS[@]}" \
+  "${BUILD_ARGS[@]}" \
   --download --force
 
 python3 /workspace/scripts/validate-openmaptiles-pmtiles.py --require-world "$PART"

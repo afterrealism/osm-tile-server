@@ -17,10 +17,10 @@ fi
 
 STYLE_ASSET_ROOT="$OUT" node "$ROOT/scripts/prepare-theme-assets.mjs"
 
+declare -a sprite_jobs=()
 while IFS=$'\t' read -r name sprite_type sprite_arg manifest_source upstream_dir local_source; do
   if [ "$sprite_type" = build ]; then
-    node "$ROOT/scripts/build-sprites.mjs" "$OUT/$name/sprite" "$sprite_arg"
-    node "$ROOT/scripts/build-sprites.mjs" --retina "$OUT/$name/sprite@2x" "$sprite_arg"
+    sprite_jobs+=("$name" "$sprite_arg")
   else
     for ratio in '' '@2x'; do
       for ext in json png; do
@@ -45,6 +45,13 @@ while IFS=$'\t' read -r name sprite_type sprite_arg manifest_source upstream_dir
     --local-source "$local_source" \
     --manifest "$OUT/$name/manifest.json"
 done < <(STYLE_ASSET_ROOT="$OUT" node "$ROOT/scripts/prepare-theme-assets.mjs" --plan)
+
+if [ "${#sprite_jobs[@]}" -gt 0 ]; then
+  printf '%s\n' "${sprite_jobs[@]}" | xargs -n2 -P"$(nproc)" bash -c '
+    node "'"$ROOT"'/scripts/build-sprites.mjs" "'"$OUT"'/$0/sprite" "$1" &&
+    node "'"$ROOT"'/scripts/build-sprites.mjs" --retina "'"$OUT"'/$0/sprite@2x" "$1"
+  '
+fi
 
 STYLE_ASSET_ROOT="$OUT" node "$ROOT/scripts/verify-local-styles.mjs"
 node "$ROOT/scripts/validate-style-schema.mjs"

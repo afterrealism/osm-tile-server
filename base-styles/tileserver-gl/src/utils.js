@@ -39,6 +39,9 @@ export function allowedScales(scale, maxScale = 9) {
   if (scale === undefined) {
     return 1;
   }
+  if (maxScale < 2) {
+    return null;
+  }
 
   const regex = new RegExp(`^[2-${maxScale}]x$`);
   if (!regex.test(scale)) {

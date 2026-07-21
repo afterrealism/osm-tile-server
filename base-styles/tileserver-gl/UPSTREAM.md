@@ -11,3 +11,5 @@ npm 11 and install-scripts are gated there).
 Upstream pushes: Prohibited; changes are maintained only in this repository.
 2026-07-20: src/serve_rendered.js: opt-in Cache-Control response header on
 rendered tiles when TILE_CACHE_CONTROL is set.
+2026-07-21: src/utils.js: reject retina scale suffixes without constructing an
+invalid regular expression when maxScaleFactor is 1; test/utils.js covers it.

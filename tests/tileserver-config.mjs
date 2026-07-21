@@ -19,6 +19,12 @@ test('cloud template matches the style registry', () => {
   assert.deepEqual(Object.keys(cloudConfig.styles).sort(), [...STYLE_NAMES].sort());
 });
 
+test('cloud renderer pools match production request concurrency', () => {
+  assert.equal(cloudConfig.options.maxScaleFactor, 1);
+  assert.deepEqual(cloudConfig.options.minRendererPoolSizes, [1]);
+  assert.deepEqual(cloudConfig.options.maxRendererPoolSizes, [4]);
+});
+
 test('data source is the local openmaptiles archive', () => {
   assert.equal(config.options.paths.pmtiles, 'openmaptiles');
   assert.equal(config.data.openmaptiles.pmtiles, 'openmaptiles.pmtiles');
