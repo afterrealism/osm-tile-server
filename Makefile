@@ -28,7 +28,6 @@ test-config:
 	./tests/local-data.sh
 	./tests/planet-source.sh
 	./tests/vendor-sources.sh
-	./tests/gcp-config.sh
 	PYTHONPATH=. python3 tests/artifact_manifest.test.py -v
 	PYTHONPATH=. python3 tests/openmaptiles-pmtiles.test.py -v
 	node --test tests/tileserver-config.mjs tests/theme-assets.test.mjs

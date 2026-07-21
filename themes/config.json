@@ -31,16 +31,6 @@
       "serve_rendered": true,
       "serve_data": false
     },
-    "nova": {
-      "style": "nova/style.json",
-      "serve_rendered": true,
-      "serve_data": false
-    },
-    "graphite": {
-      "style": "graphite/style.json",
-      "serve_rendered": true,
-      "serve_data": false
-    },
     "fjord": {
       "style": "fjord/style.json",
       "serve_rendered": true,
@@ -48,41 +38,6 @@
     },
     "meridian": {
       "style": "meridian/style.json",
-      "serve_rendered": true,
-      "serve_data": false
-    },
-    "community": {
-      "style": "community/style.json",
-      "serve_rendered": true,
-      "serve_data": false
-    },
-    "canvas": {
-      "style": "canvas/style.json",
-      "serve_rendered": true,
-      "serve_data": false
-    },
-    "mist": {
-      "style": "mist/style.json",
-      "serve_rendered": true,
-      "serve_data": false
-    },
-    "prism": {
-      "style": "prism/style.json",
-      "serve_rendered": true,
-      "serve_data": false
-    },
-    "avenue": {
-      "style": "avenue/style.json",
-      "serve_rendered": true,
-      "serve_data": false
-    },
-    "watercolor": {
-      "style": "watercolor/style.json",
-      "serve_rendered": true,
-      "serve_data": false
-    },
-    "ink": {
-      "style": "ink/style.json",
       "serve_rendered": true,
       "serve_data": false
     }

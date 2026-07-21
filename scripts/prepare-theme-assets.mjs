@@ -2,8 +2,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFile
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { convertV4Style, remapFonts } from './convert-maptiler-v4.mjs';
-import { STYLES, baseStylesRoot, v4SourcesRoot } from './style-registry.mjs';
+import { STYLES, baseStylesRoot } from './style-registry.mjs';
 
 const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const assetRoot = process.env.STYLE_ASSET_ROOT ?? join(repoRoot, 'data/style-assets');
@@ -29,6 +28,15 @@ function loadAvailableFonts() {
   const fontsDir = join(assetRoot, 'fonts');
   if (!existsSync(fontsDir)) return null;
   return new Set(readdirSync(fontsDir));
+}
+
+function remapFonts(fonts, availableFonts) {
+  if (!availableFonts) return fonts;
+  const mapped = fonts.filter((f) => availableFonts.has(f));
+  if (mapped.length === 0 && availableFonts.size > 0) {
+    return [availableFonts.values().next().value];
+  }
+  return mapped.length > 0 ? mapped : fonts;
 }
 
 function prepareVendored(def, availableFonts) {
@@ -67,35 +75,17 @@ if (process.argv.includes('--plan')) {
     const spriteArg = sprites.type === 'build'
       ? join(baseStylesRoot, sprites.icons)
       : join(baseStylesRoot, sprites.prefix);
-    const manifestSource = def.v4
-      ? join(v4SourcesRoot, `${def.v4}.json`)
-      : join(baseStylesRoot, def.upstream, 'style.json');
-    const upstreamDir = def.v4 ? '-' : def.upstream;
-    const localSource = def.v4
-      ? (sprites.type === 'prebuilt' ? dirname(join(baseStylesRoot, sprites.prefix)) : join(baseStylesRoot, 'maptiler-basic'))
-      : join(baseStylesRoot, def.upstream);
-    console.log([def.name, sprites.type, spriteArg, manifestSource, upstreamDir, localSource].join('\t'));
+    const manifestSource = join(baseStylesRoot, def.upstream, 'style.json');
+    const localSource = join(baseStylesRoot, def.upstream);
+    console.log([def.name, sprites.type, spriteArg, manifestSource, def.upstream, localSource].join('\t'));
   }
 } else {
   const availableFonts = loadAvailableFonts();
   for (const def of STYLES) {
-    let style;
-    if (def.v4) {
-      const sourcePath = join(v4SourcesRoot, `${def.v4}.json`);
-      if (!existsSync(sourcePath)) {
-        throw new Error(`missing ${sourcePath}; fetch it with scripts/fetch-v4-styles.sh`);
-      }
-      style = convertV4Style(JSON.parse(readFileSync(sourcePath, 'utf8')), {
-        availableFonts,
-        keepIcons: def.keepIcons,
-        dropLayerIds: def.dropLayerIds,
-      });
-    } else {
-      style = prepareVendored(def, availableFonts);
-    }
+    const style = prepareVendored(def, availableFonts);
     const targetDir = join(assetRoot, def.name);
     mkdirSync(targetDir, { recursive: true });
     writeAtomic(join(targetDir, 'style.json'), `${JSON.stringify(style, null, 2)}\n`);
-    console.log(`prepared ${def.name} from ${def.v4 ?? def.upstream}`);
+    console.log(`prepared ${def.name} from ${def.upstream}`);
   }
 }

@@ -29,13 +29,8 @@ while IFS=$'\t' read -r name sprite_type sprite_arg manifest_source upstream_dir
       done
     done
   fi
-  if [ "$upstream_dir" != "-" ]; then
-    source_ref=local-vendored
-    source_commit=$(grep '^Commit: ' "$ROOT/base-styles/$upstream_dir/UPSTREAM.md" | cut -d' ' -f2)
-  else
-    source_ref=maptiler-v4-local
-    source_commit=none
-  fi
+  source_ref=local-vendored
+  source_commit=$(grep '^Commit: ' "$ROOT/base-styles/$upstream_dir/UPSTREAM.md" | cut -d' ' -f2)
   python3 "$ROOT/scripts/artifact_manifest.py" write \
     --kind "theme-$name" \
     --source "$manifest_source" \

@@ -1,14 +1,14 @@
 # OpenStreetMap Tile Server
 
-Full-world OpenStreetMap raster tiles rendered from one immutable PMTiles v3 archive in fifteen local styles.
+Full-world OpenStreetMap raster tiles rendered from one immutable PMTiles v3 archive in six local styles.
 
 ```text
 planet-latest.osm.pbf -> Planetiler -> openmaptiles-<sha16>.pmtiles
-                                      -> TileServer GL
-                                      -> /styles/{atlas,paper,onyx,terra,nova,graphite,fjord,meridian,community,canvas,mist,prism,avenue,watercolor,ink}/{z}/{x}/{y}.png
+                                       -> TileServer GL
+                                       -> /styles/{atlas,paper,onyx,terra,fjord,meridian}/{z}/{x}/{y}.png
 ```
 
-The source PBF is a build-time input only. Local and cloud runtimes require the PMTiles archive and complete style assets.
+The source PBF is a build-time input only. The runtime requires the PMTiles archive and complete style assets.
 
 ## Requirements
 
@@ -49,17 +49,8 @@ TileServer GL serves raster PNG output on port 8080:
 | `/styles/paper/{z}/{x}/{y}.png` | Positron |
 | `/styles/onyx/{z}/{x}/{y}.png` | Dark Matter |
 | `/styles/terra/{z}/{x}/{y}.png` | Green OSM Bright derivative |
-| `/styles/nova/{z}/{x}/{y}.png` | MapTiler Basic (open) |
-| `/styles/graphite/{z}/{x}/{y}.png` | MapTiler Toner (open) |
-| `/styles/fjord/{z}/{x}/{y}.png` | Fiord Color (open) |
-| `/styles/meridian/{z}/{x}/{y}.png` | OSM Liberty (open) |
-| `/styles/community/{z}/{x}/{y}.png` | MapTiler OpenStreetMap (proprietary, local use only) |
-| `/styles/canvas/{z}/{x}/{y}.png` | MapTiler Base v4 re-authored to OpenMapTiles schema (local use only) |
-| `/styles/mist/{z}/{x}/{y}.png` | MapTiler Backdrop v4 re-authored (local use only) |
-| `/styles/prism/{z}/{x}/{y}.png` | MapTiler Dataviz v4 re-authored (local use only) |
-| `/styles/avenue/{z}/{x}/{y}.png` | MapTiler Streets v4 re-authored (local use only) |
-| `/styles/watercolor/{z}/{x}/{y}.png` | MapTiler Aquarelle v4 re-authored (local use only) |
-| `/styles/ink/{z}/{x}/{y}.png` | MapTiler Toner v2, OpenMapTiles v3 schema (local use only) |
+| `/styles/fjord/{z}/{x}/{y}.png` | Fiord Color |
+| `/styles/meridian/{z}/{x}/{y}.png` | OSM Liberty |
 
 `/health` reports readiness only after all renderer pools initialize. Every style, sprite, glyph, and tile source is local to the runtime.
 
@@ -70,17 +61,10 @@ TileServer GL serves raster PNG output on port 8080:
 - `data/openmaptiles/openmaptiles-<sha16>.pmtiles`: immutable world archive.
 - `data/openmaptiles/openmaptiles.pmtiles`: stable runtime symlink.
 - `data/openmaptiles/manifest.json`: source, artifact, and vendor provenance.
-- `data/style-assets/{atlas,paper,onyx,terra,nova,graphite,fjord,meridian,community,canvas,mist,prism,avenue,watercolor,ink}/`: styles, normal and retina sprites, and manifests.
+- `data/style-assets/{atlas,paper,onyx,terra,fjord,meridian}/`: styles, normal and retina sprites, and manifests.
 - `data/style-assets/fonts/`: local PBF font stacks.
-- `data/v4-sources/`: fetched proprietary MapTiler v4 source styles (local use only) re-authored by `scripts/convert-maptiler-v4.mjs`; refetch with `MAPTILER_KEY=... scripts/fetch-v4-styles.sh`.
 
 Do not commit generated source, archive, style, sprite, font, manifest, or build-context files.
-
-## Cloud Run
-
-The existing deployment uses project `scheece-dev-20260701`, region `asia-southeast1`, service `tileserver`, and domain <https://tiles.geocanvas.dev>. The runtime image embeds style assets and validators. A private `tiles-geocanvas-dev` bucket supplies one immutable PMTiles object through a read-only Cloud Storage volume.
-
-Cloud Run uses an HTTP `/health` startup probe so requests are admitted only after renderer initialization. Build, upload, deployment, acceptance, update, and rollback procedures are documented in [`gcp/README.md`](gcp/README.md).
 
 ## Verification
 
@@ -90,11 +74,10 @@ Run fast source and configuration checks:
 make test-config
 ```
 
-After building the world archive and assets, run the local integration and staged cloud-image checks:
+After building the world archive and assets, run the local integration check:
 
 ```bash
 make CONTAINER_ENGINE=podman test
-CONTAINER_ENGINE=podman ./tests/gcp-image.sh
 ```
 
 ## Attribution
