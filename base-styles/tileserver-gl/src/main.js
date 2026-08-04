@@ -32,11 +32,12 @@ process.on('unhandledRejection', (reason, promise) => {
   // Don't exit - keep server running
 });
 
-// Prevent uncaught exceptions from crashing the server
+// Process state is undefined after an uncaught throw; exit and let the
+// container restart policy bring up a clean instance.
 process.on('uncaughtException', (error) => {
   console.error('Uncaught Exception:', error);
   console.error('Stack:', error.stack);
-  // Don't exit - keep server running
+  process.exit(1);
 });
 
 // ============================================================================

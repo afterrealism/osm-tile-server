@@ -6,6 +6,8 @@ services:
       BIND: 0.0.0.0
       PORT: 8080
       STYLE_ASSET_ROOT: /data/style-assets
+      TILE_CACHE_CONTROL: "public, max-age=86400, immutable"
+      PMTILES_MAX_CACHE_ENTRIES: "512"
     volumes:
       - ./data/openmaptiles:/data/openmaptiles:ro
       - ./data/style-assets:/data/style-assets:ro
@@ -15,11 +17,13 @@ services:
     entrypoint: [/workspace/themes/start.sh]
     ports:
       - "8080:8080"
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "node", "/usr/src/app/src/healthcheck.js"]
-      interval: 5s
+      interval: 30s
       timeout: 5s
-      retries: 60
+      retries: 3
+      start_period: 120s
 
   planetiler:
     build:

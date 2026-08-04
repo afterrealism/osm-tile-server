@@ -19,3 +19,18 @@ export const STYLES = [
 ];
 
 export const STYLE_NAMES = STYLES.map((style) => style.name);
+
+// Every font family the registry styles reference; glyph generation is limited
+// to this set and tests/theme-assets.test.mjs asserts it stays in sync.
+export const FONT_FAMILIES = [
+  'Metropolis Light',
+  'Metropolis Light Italic',
+  'Metropolis Medium Italic',
+  'Metropolis Regular',
+  'Noto Sans Bold',
+  'Noto Sans Italic',
+  'Noto Sans Regular',
+  'Roboto Condensed Italic',
+  'Roboto Medium',
+  'Roboto Regular',
+];

@@ -1,6 +1,6 @@
 .PHONY: build fetch-planet check-capacity build-pmtiles assets run test test-config test-multistyle stop
 
-CONTAINER_ENGINE ?= docker
+CONTAINER_ENGINE ?= $(shell command -v docker >/dev/null 2>&1 && echo docker || echo podman)
 COMPOSE = ${CONTAINER_ENGINE} compose
 
 build:
@@ -14,6 +14,7 @@ check-capacity:
 	./scripts/check-planet-capacity.sh
 
 build-pmtiles: check-capacity
+	./scripts/fetch-openmaptiles-sources.sh
 	${COMPOSE} --profile tools run --rm planetiler
 
 assets:

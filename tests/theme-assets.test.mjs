@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 
-import { STYLE_NAMES } from '../scripts/style-registry.mjs';
+import { FONT_FAMILIES, STYLE_NAMES } from '../scripts/style-registry.mjs';
 
 const root = mkdtempSync(join(tmpdir(), 'theme-assets-'));
 test.after(() => rmSync(root, { recursive: true, force: true }));
@@ -35,6 +35,16 @@ test('atlas style preserves the OSM Bright palette', () => {
   );
   assert.equal(atlasPaint.background['background-color'], '#f8f4f0');
   assert.equal(atlasPaint['landcover-wood']['fill-color'], '#6a4');
+});
+
+test('FONT_FAMILIES matches the union of style text-fonts', () => {
+  const fams = new Set();
+  for (const name of STYLE_NAMES) {
+    for (const layer of readStyle(name).layers) {
+      for (const family of layer.layout?.['text-font'] ?? []) fams.add(family);
+    }
+  }
+  assert.deepEqual([...fams].sort(), [...FONT_FAMILIES].sort());
 });
 
 test('terra style has the green terrain palette', () => {

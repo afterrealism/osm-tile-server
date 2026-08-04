@@ -53,4 +53,9 @@ done
 
 test "$(sha256sum "$TMP/18-135536-89345-"*.png | cut -d' ' -f1 | sort -u | wc -l)" = "${#STYLES[@]}"
 
+curl -fsSI "http://127.0.0.1:$PORT/styles/${STYLES[0]}/0/0/0.png" \
+  | grep -qi '^cache-control: public, max-age=86400, immutable'
+test "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/styles/${STYLES[0]}/0/0/0@2x.png")" = 400
+test "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/styles/${STYLES[0]}/static/0,0,2/256x256.png")" = 404
+
 echo "PMTiles-only ${#STYLES[@]}-style stack is valid"

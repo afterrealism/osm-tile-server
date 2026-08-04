@@ -1,5 +1,5 @@
 # Use Ubuntu 24.04 (Noble) as the base
-FROM ubuntu:noble AS builder
+FROM ubuntu:noble@sha256:4fbb8e6a8395de5a7550b33509421a2bafbc0aab6c06ba2cef9ebffbc7092d90 AS builder
 
 ENV NODE_ENV="production"
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -50,7 +50,7 @@ RUN npm config set fetch-retries 5 && \
     chown -R root:root /usr/src/app
 
 # --- Final Stage ---
-FROM ubuntu:noble AS final
+FROM ubuntu:noble@sha256:4fbb8e6a8395de5a7550b33509421a2bafbc0aab6c06ba2cef9ebffbc7092d90 AS final
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 

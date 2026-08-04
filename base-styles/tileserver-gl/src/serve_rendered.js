@@ -1585,6 +1585,12 @@ export const serve_rendered = {
       return new advancedPool.Pool({
         min,
         max,
+        // Bounded queue: overload fails fast as 503 instead of queueing unbounded
+        queue: new advancedPool.TimedQueue({
+          defaultTimeout: 15000,
+          queueSize: 200,
+          checkInterval: 1000,
+        }),
         create: createRenderer.bind(null, ratio),
         destroy: (renderer) => {
           renderer.release();
@@ -1853,13 +1859,19 @@ export const serve_rendered = {
       const maxPoolSize = Math.max(minPoolSize, maxPoolSizes[j]);
       // eslint-disable-next-line security/detect-object-injection -- s is loop counter from 1 to maxScaleFactor
       map.renderers[s] = createPool(s, 'tile', minPoolSize, maxPoolSize);
-      // eslint-disable-next-line security/detect-object-injection -- s is loop counter from 1 to maxScaleFactor
-      map.renderersStatic[s] = createPool(
-        s,
-        'static',
-        minPoolSize,
-        maxPoolSize,
-      );
+      // Static-mode pools are also used by tile requests when tileMargin > 0
+      if (
+        options.serveStaticMaps !== false ||
+        Math.max(options.tileMargin || 0, 0) > 0
+      ) {
+        // eslint-disable-next-line security/detect-object-injection -- s is loop counter from 1 to maxScaleFactor
+        map.renderersStatic[s] = createPool(
+          s,
+          'static',
+          minPoolSize,
+          maxPoolSize,
+        );
+      }
     }
   },
   /**

@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFile
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { STYLES, baseStylesRoot } from './style-registry.mjs';
+import { FONT_FAMILIES, STYLES, baseStylesRoot } from './style-registry.mjs';
 
 const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const assetRoot = process.env.STYLE_ASSET_ROOT ?? join(repoRoot, 'data/style-assets');
@@ -79,6 +79,27 @@ if (process.argv.includes('--plan')) {
     const localSource = join(baseStylesRoot, def.upstream);
     console.log([def.name, sprites.type, spriteArg, manifestSource, def.upstream, localSource].join('\t'));
   }
+} else if (process.argv.includes('--fonts')) {
+  for (const family of FONT_FAMILIES) {
+    console.log(family);
+  }
+} else if (process.argv.includes('--config')) {
+  const template = JSON.parse(
+    readFileSync(join(repoRoot, 'themes/config.options.json'), 'utf8'),
+  );
+  const config = {
+    options: template.options,
+    styles: Object.fromEntries(
+      STYLES.map((def) => [def.name, {
+        style: `${def.name}/style.json`,
+        serve_rendered: true,
+        serve_data: false,
+      }]),
+    ),
+    data: template.data,
+  };
+  writeAtomic(join(repoRoot, 'themes/config.json'), `${JSON.stringify(config, null, 2)}\n`);
+  console.log('generated themes/config.json');
 } else {
   const availableFonts = loadAvailableFonts();
   for (const def of STYLES) {

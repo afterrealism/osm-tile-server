@@ -1,0 +1,23 @@
+{
+  "options": {
+    "paths": {
+      "root": "/data",
+      "styles": "style-assets",
+      "fonts": "style-assets/fonts",
+      "sprites": "style-assets",
+      "pmtiles": "openmaptiles"
+    },
+    "frontPage": false,
+    "allowedHosts": "localhost,127.0.0.1",
+    "maxScaleFactor": 1,
+    "minRendererPoolSizes": [2],
+    "maxRendererPoolSizes": [8],
+    "serveStaticMaps": false
+  },
+  "data": {
+    "openmaptiles": {
+      "pmtiles": "openmaptiles.pmtiles",
+      "sparse": false
+    }
+  }
+}

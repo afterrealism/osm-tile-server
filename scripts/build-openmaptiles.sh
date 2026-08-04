@@ -13,6 +13,17 @@ if ! flock -n 9; then
 fi
 rm -f "$PART"
 
+# All non-OSM inputs must match the committed pins before java starts; the
+# java invocation below never touches the network (no --download) except the
+# sanctioned wikidata bootstrap when the cache is absent.
+LOCK=/workspace/scripts/openmaptiles-sources.sha256
+(cd "$OUT" && grep -v wikidata_names "$LOCK" | sha256sum --strict -c -)
+if [ -s "$OUT/sources/wikidata_names.json" ]; then
+  (cd "$OUT" && grep wikidata_names "$LOCK" | sha256sum --strict -c -)
+else
+  echo "wikidata_names.json absent; planetiler will derive it via query.wikidata.org (re-pin with scripts/fetch-openmaptiles-sources.sh --pin)" >&2
+fi
+
 WIKIDATA_ARGS=()
 if [ ! -s "$OUT/sources/wikidata_names.json" ]; then
   WIKIDATA_ARGS=(--fetch-wikidata)
@@ -37,7 +48,7 @@ java -jar /app/planetiler-openmaptiles.jar \
   --sort_max_writers="${SORT_MAX_WRITERS:-12}" \
   "${WIKIDATA_ARGS[@]}" \
   "${BUILD_ARGS[@]}" \
-  --download --force
+  --force
 
 python3 /workspace/scripts/validate-openmaptiles-pmtiles.py --require-world "$PART"
 SHA=$(sha256sum "$PART" | cut -c1-16)

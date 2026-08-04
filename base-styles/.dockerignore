@@ -1,0 +1,10 @@
+# Allowlist for the planetiler image build (docker-compose.yml builds with
+# context ./base-styles); everything the Dockerfile does not COPY stays out.
+*
+!planetiler/
+!planetiler-openmaptiles/
+planetiler/planet-logs/
+planetiler/layerstats/
+**/target/
+**/.factorypath
+**/node_modules/

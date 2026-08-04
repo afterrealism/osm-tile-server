@@ -1,5 +1,15 @@
 import fs from 'node:fs';
-import { PMTiles, FetchSource, EtagMismatch } from 'pmtiles';
+import {
+  PMTiles,
+  FetchSource,
+  EtagMismatch,
+  SharedPromiseCache,
+} from 'pmtiles';
+
+// pmtiles' default 100-entry directory cache thrashes on a planet-scale
+// archive (~2900 leaf directories); each entry is ~1-2 MB decompressed.
+const PMTILES_MAX_CACHE_ENTRIES =
+  parseInt(process.env.PMTILES_MAX_CACHE_ENTRIES, 10) || 512;
 import { isValidHttpUrl, isS3Url } from './utils.js';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { fromIni } from '@aws-sdk/credential-provider-ini';
@@ -361,13 +371,19 @@ export function openPMtiles(
       s3UrlFormat,
       verbose,
     );
-    pmtiles = new PMTiles(source);
+    pmtiles = new PMTiles(
+      source,
+      new SharedPromiseCache(PMTILES_MAX_CACHE_ENTRIES),
+    );
   } else if (isValidHttpUrl(filePath)) {
     if (verbose >= 2) {
       console.log(`Opening PMTiles from HTTP: ${filePath}`);
     }
     const source = new FetchSource(filePath);
-    pmtiles = new PMTiles(source);
+    pmtiles = new PMTiles(
+      source,
+      new SharedPromiseCache(PMTILES_MAX_CACHE_ENTRIES),
+    );
   } else {
     if (verbose >= 2) {
       console.log(`Opening PMTiles from local file: ${filePath}`);
@@ -375,7 +391,10 @@ export function openPMtiles(
 
     const fd = fs.openSync(filePath, 'r');
     const source = new PMTilesFileSource(fd);
-    pmtiles = new PMTiles(source);
+    pmtiles = new PMTiles(
+      source,
+      new SharedPromiseCache(PMTILES_MAX_CACHE_ENTRIES),
+    );
   }
 
   // Cache the PMTiles object

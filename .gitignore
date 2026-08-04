@@ -2,6 +2,12 @@
 !/data/.gitkeep
 /themes/node_modules/
 __pycache__/
+.factorypath
+/.ruff_cache/
+
+# Proprietary MapTiler material must never be committed
+/base-styles/maptiler-*/
+/base-styles/v4-assets/
 
 # Local infrastructure and deployment material
 /infrastructure/

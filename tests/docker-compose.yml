@@ -5,6 +5,8 @@ services:
       BIND: 0.0.0.0
       PORT: 8080
       STYLE_ASSET_ROOT: /data/style-assets
+      TILE_CACHE_CONTROL: "public, max-age=86400, immutable"
+      PMTILES_MAX_CACHE_ENTRIES: "512"
     volumes:
       - ../data/openmaptiles:/data/openmaptiles:ro
       - ../data/style-assets:/data/style-assets:ro

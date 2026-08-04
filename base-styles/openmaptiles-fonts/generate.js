@@ -6,6 +6,9 @@ var fontnik = require('fontnik'),
 
 var DEBUG = false;
 
+// Optional comma-separated allowlist of family names to generate.
+var only = process.env.FONT_FAMILIES ? process.env.FONT_FAMILIES.split(',') : null;
+
 var outputDir = '_output';
 
 var sizeSumTotal = 0;
@@ -132,6 +135,9 @@ fs.readdirSync('.').forEach(function(dir) {
           });
         }
       });
+    }
+    if (only) {
+      fonts = fonts.filter(function(f) { return only.indexOf(f.name) !== -1; });
     }
     if (fonts && fonts.length) {
       todo.push([dir, fonts]);
